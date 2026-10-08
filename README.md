@@ -5,7 +5,21 @@ Bu proje, **TEKNOFEST Sürü İHA Yarışması** kapsamında üç insansız hava
 Simülasyon altyapısında **PX4 SITL, ROS 2, Gazebo, MAVSDK ve OpenCV** birlikte kullanıldı. Sistem; formasyon uçuşu, joystick ile sürü kontrolü, QR tabanlı görev yürütme, renkli alana otonom iniş, İHA'ya özel görevler ve pitch-roll-yaw manevraları gibi farklı senaryolar üzerinde test edildi.
 
 > Yarışma kapsamında geliştirilen kaynak kodlar public olarak paylaşılmamaktadır. Bu repo, projenin mimarisini, çalışma mantığını ve simülasyon çıktılarının nasıl elde edildiğini göstermek amacıyla hazırlanmıştır.
+<p align="center">
+  <img src="assets/00_drones.png" width="850" alt="Dağıtık Sürü İHA Simülasyonu">
+</p>
 
+<p align="center">
+  <em>Gazebo simülasyon ortamında kullanılan üç İHA.</em>
+</p>
+
+<p align="center">
+  <img src="assets/01_simulation_overview.png" width="850" alt="Gazebo görev ortamı">
+</p>
+
+<p align="center">
+  <em>QR görev noktaları ve iniş bölgelerini içeren Gazebo simülasyon ortamı.</em>
+</p>
 ---
 
 ## Sistem Yaklaşımı
@@ -35,6 +49,14 @@ flowchart LR
     P2 --> GZ
     P3 --> GZ
 ```
+<p align="center">
+  <img src="assets/02_distributed_agents_01.png" width="48%" alt="Dağıtık İHA süreçleri">
+  <img src="assets/02_distributed_agents_02.png" width="48%" alt="Dağıtık İHA süreçleri">
+</p>
+
+<p align="center">
+  <em>Her İHA'nın bağımsız süreç ve kontrol yapısı üzerinden çalıştırılması.</em>
+</p>
 
 ---
 
@@ -45,6 +67,16 @@ flowchart LR
 Bu sayede formasyon yalnızca sabit bir yönde değil, manevra sırasında da korunabilir. Araçların anlık konum ve hız hataları kullanılarak yerel düzeltmeler uygulanır; aşırı düzeltmeler ise sınırlandırılır. İHA'lar birbirine fazla yaklaştığında mesafeye bağlı ek bir kaçınma düzeltmesi devreye girer.
 
 Formasyon performansı yalnızca görsel olarak değerlendirilmedi. Uçuş sırasında kaydedilen konum verileri kullanılarak araçlar arası mesafe değişimleri, maksimum sapma ve RMSE değerleri de analiz edildi.
+
+<p align="center">
+  <img src="assets/04_v_formation.png" width="31%" alt="V formasyonu">
+  <img src="assets/05_line_formation.png" width="31%" alt="Line formasyonu">
+  <img src="assets/06_arrow_formation.png" width="31%" alt="Arrow formasyonu">
+</p>
+
+<p align="center">
+  <em>Simülasyon ortamında uygulanan V, Line ve Arrow sürü formasyonları.</em>
+</p>
 
 ---
 
@@ -61,6 +93,13 @@ Bu modda üç araç ayrı süreçlerde çalışmaya devam ederken ortak hareket 
 ## QR Tabanlı Otonom Görev Akışı
 
 Görev sahasına yerleştirilen QR kodlar Gazebo'daki kamera görüntüsü üzerinden okunur. Görüntü ROS 2 aracılığıyla alınır, NumPy/OpenCV formatına çevrilir ve **OpenCV `QRCodeDetector`** ile decode edilir.
+<p align="center">
+  <img src="assets/08_qr_detection.png" width="750" alt="QR algılama">
+</p>
+
+<p align="center">
+  <em>Gazebo kamera görüntüsü üzerinden gerçekleştirilen QR algılama işlemi.</em>
+</p>
 
 QR içerisinde doğrudan uçuş kontrol sinyalleri yerine yüksek seviyeli görev tanımları bulunur. Okunan veri görev yönetim katmanında yorumlanarak sürü davranışına dönüştürülür. Bu yapı sayesinde aynı görev akışı içinde;
 
@@ -75,6 +114,13 @@ QR içerisinde doğrudan uçuş kontrol sinyalleri yerine yüksek seviyeli göre
 - eve dönüş
 
 gibi farklı görevler yürütülebilir.
+<p align="center">
+  <img src="assets/09_qr_mission_execution.png" width="750" alt="QR görev yürütme">
+</p>
+
+<p align="center">
+  <em>QR içerisinden alınan görev bilgisinin sürü tarafından uygulanması.</em>
+</p>
 
 Aynı QR'ın kamera görüntüsünde uzun süre kalması durumunda görevin tekrar tekrar tetiklenmesini önlemek için daha önce okunan QR'lar kayıt altında tutulur.
 
@@ -85,6 +131,13 @@ Aynı QR'ın kamera görüntüsünde uzun süre kalması durumunda görevin tekr
 Renkli iniş alanlarının tespiti için OpenCV tabanlı bir görüntü işleme hattı geliştirildi. Kamera görüntüsü HSV renk uzayına çevrilerek kırmızı ve mavi bölgeler ayrıştırıldı. Gürültüyü azaltmak için morfolojik işlemler uygulandı ve geçerli hedef en büyük kontur üzerinden belirlendi.
 
 Tespit edilen alanın merkezi ile kamera görüntüsünün merkezi arasındaki fark, İHA için küçük konum düzeltmelerine çevrildi. Araç hedefin üzerine yeterince hizalandığında ve alan görüntüde belirli bir büyüklüğe ulaştığında kontrollü alçalma başlatıldı.
+<p align="center">
+  <img src="assets/11_color_landing.png" width="750" alt="Renkli alana otonom iniş">
+</p>
+
+<p align="center">
+  <em>Renkli iniş bölgesine görsel geri besleme ile gerçekleştirilen otonom yaklaşma ve iniş.</em>
+</p>
 
 Hedef kısa süreli kaybolduğunda görev doğrudan sonlandırılmadı. Son görülen konum korunarak sınırlı bir yeniden arama davranışı uygulandı. Görev tamamlandıktan sonra ilgili İHA'nın tekrar kalkıp sürü formasyonuna katılabileceği bir **rejoin** akışı da oluşturuldu.
 
