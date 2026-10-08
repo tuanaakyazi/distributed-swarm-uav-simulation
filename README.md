@@ -30,24 +30,45 @@ Bu nedenle yapı klasik bir lider-takipçi sistemi olarak tasarlanmadı. Bazı s
 
 ```mermaid
 flowchart LR
-    ROS[ROS 2 Haberleşme]
+    IN[Görev / Joystick / QR]
+
+    ROS[ROS 2 Topics]
+
     A1[İHA 1 Ajanı]
     A2[İHA 2 Ajanı]
     A3[İHA 3 Ajanı]
+
+    M1[MAVSDK]
+    M2[MAVSDK]
+    M3[MAVSDK]
+
     P1[PX4 SITL]
     P2[PX4 SITL]
     P3[PX4 SITL]
+
     GZ[Gazebo]
+
+    IN --> ROS
 
     ROS <--> A1
     ROS <--> A2
     ROS <--> A3
-    A1 --> P1
-    A2 --> P2
-    A3 --> P3
+
+    A1 --> M1
+    A2 --> M2
+    A3 --> M3
+
+    M1 --> P1
+    M2 --> P2
+    M3 --> P3
+
     P1 --> GZ
     P2 --> GZ
     P3 --> GZ
+
+    GZ -. Telemetry / Pose .-> A1
+    GZ -. Telemetry / Pose .-> A2
+    GZ -. Telemetry / Pose .-> A3
 ```
 <p align="center">
   <img src="assets/02_distributed_agents_01.png" width="48%" alt="Dağıtık İHA süreçleri">
