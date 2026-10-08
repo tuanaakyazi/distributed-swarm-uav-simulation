@@ -29,46 +29,56 @@ Sistemde üç İHA da ayrı birer ajan olarak çalışır. Her aracın kendi **P
 Bu nedenle yapı klasik bir lider-takipçi sistemi olarak tasarlanmadı. Bazı senaryolarda joystick, kamera veya QR verisi tek bir giriş noktasından sisteme alınsa da diğer araçların düşük seviyeli uçuş kontrolü merkezi olarak hesaplanmaz.
 
 ```mermaid
-flowchart LR
-    IN[Görev / Joystick / QR]
+flowchart TB
 
-    ROS[ROS 2 Topics]
+    INPUT[Görev Girdileri<br/>Joystick / QR / Görev Komutları]
+    ROS[ROS 2 Topic Ağı<br/>Ajanlar Arası Haberleşme]
 
-    A1[İHA 1 Ajanı]
-    A2[İHA 2 Ajanı]
-    A3[İHA 3 Ajanı]
+    INPUT --> ROS
 
-    M1[MAVSDK]
-    M2[MAVSDK]
-    M3[MAVSDK]
+    subgraph SWARM["Dağıtık Sürü Mimarisi"]
+        direction LR
 
-    P1[PX4 SITL]
-    P2[PX4 SITL]
-    P3[PX4 SITL]
+        subgraph D1["İHA 1"]
+            direction TB
+            A1[Python Kontrol Süreci<br/>Yerel Karar ve Setpoint Hesabı]
+            M1[MAVSDK]
+            P1[PX4 SITL]
 
-    GZ[Gazebo]
+            A1 <--> M1
+            M1 <--> P1
+        end
 
-    IN --> ROS
+        subgraph D2["İHA 2"]
+            direction TB
+            A2[Python Kontrol Süreci<br/>Yerel Karar ve Setpoint Hesabı]
+            M2[MAVSDK]
+            P2[PX4 SITL]
+
+            A2 <--> M2
+            M2 <--> P2
+        end
+
+        subgraph D3["İHA 3"]
+            direction TB
+            A3[Python Kontrol Süreci<br/>Yerel Karar ve Setpoint Hesabı]
+            M3[MAVSDK]
+            P3[PX4 SITL]
+
+            A3 <--> M3
+            M3 <--> P3
+        end
+    end
 
     ROS <--> A1
     ROS <--> A2
     ROS <--> A3
 
-    A1 --> M1
-    A2 --> M2
-    A3 --> M3
+    GZ[Gazebo Simülasyon Ortamı]
 
-    M1 --> P1
-    M2 --> P2
-    M3 --> P3
-
-    P1 --> GZ
-    P2 --> GZ
-    P3 --> GZ
-
-    GZ -. Telemetry / Pose .-> A1
-    GZ -. Telemetry / Pose .-> A2
-    GZ -. Telemetry / Pose .-> A3
+    P1 <--> GZ
+    P2 <--> GZ
+    P3 <--> GZ
 ```
 <p align="center">
   <img src="assets/02_distributed_agents_01.png" width="48%" alt="Dağıtık İHA süreçleri">
